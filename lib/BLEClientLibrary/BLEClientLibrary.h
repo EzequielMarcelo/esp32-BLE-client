@@ -7,17 +7,25 @@
 #define SERVICE_UUID "0000ffe0-0000-1000-8000-00805f9b34fb"
 #define BUTTON_UUID "0000ffe1-0000-1000-8000-00805f9b34fb"
 
-class BLEClientLibrary: public BLEAdvertisedDeviceCallbacks
+class BLEClientLibrary: public BLEAdvertisedDeviceCallbacks, public BLEClientCallbacks
 {
     private:
         BLEClient *_client;
         BLEScan *_scan;
-        void onResult(BLEAdvertisedDevice device);    
+        BLEAdvertisedDevice *_foundDevice = nullptr;
+
+        // Callbacks
+        void onResult(BLEAdvertisedDevice advertisedDevice);
+        void onConnect(BLEClient *client);
+        void onDisconnect(BLEClient *client);
 
     public:
         void begin();
         void StartScan();
-        void Connect(BLEAdvertisedDevice device);   
+        void Connect(BLEAdvertisedDevice *device); 
+        void Disconnect();  
+        bool isConnected();
+        BLEAdvertisedDevice *GetFoundDevice();
 };
 
 #endif

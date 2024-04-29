@@ -10,8 +10,13 @@ void setup()
 }
 
 void loop() 
-{
-  BLE.StartScan();
+{  
+  if(!BLE.isConnected() && BLE.GetFoundDevice())
+      BLE.Connect(BLE.GetFoundDevice());
+
+  else if(!BLE.GetFoundDevice())
+    BLE.StartScan();
+  
   delay(100);
 }
 
