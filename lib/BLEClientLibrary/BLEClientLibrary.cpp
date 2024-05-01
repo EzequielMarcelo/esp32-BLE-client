@@ -1,6 +1,9 @@
 #include "BLEClientLibrary.h"
 
-void BLEClientLibrary::begin()
+BLERemoteCharacteristic *BLEClientLibrary::buttonCharacteristic = nullptr;
+void (*BLEClientLibrary::_notificationCallback)() = NULL;
+
+void BLEClientLibrary::begin(void(*notificationCallback)(void))
 {
     BLEDevice::init("");
     _scan = BLEDevice::getScan();
@@ -8,6 +11,9 @@ void BLEClientLibrary::begin()
     _scan->setInterval(1349);
     _scan->setWindow(449);
     _scan->setActiveScan(true);
+
+    _notificationCallback = notificationCallback;
+
     Serial.println("Scanning...");
 }
 void BLEClientLibrary::StartScan()
@@ -34,13 +40,22 @@ void BLEClientLibrary::onDisconnect(BLEClient *client)
 {
     Serial.println("Disconnected");
 }
+void BLEClientLibrary::buttonNotification(BLERemoteCharacteristic *characteristic, uint8_t *data, size_t length, bool flag)
+{
+    if (characteristic == buttonCharacteristic && *data == 1)
+    {
+        Serial.println("ButtonClick"); 
+        if(_notificationCallback != NULL)
+            _notificationCallback();                       
+    }         
+}
 void BLEClientLibrary::Connect(BLEAdvertisedDevice *device)
 {
     _client = BLEDevice::createClient();
     _client->setClientCallbacks(this);
 
     if (_client->connect(device))
-    {
+    {      
         BLERemoteService *remoteService = _client->getService(SERVICE_UUID);
 
         if (remoteService == nullptr)
@@ -48,13 +63,16 @@ void BLEClientLibrary::Connect(BLEAdvertisedDevice *device)
             Serial.println("Unrecognized service");
             Disconnect();
             _foundDevice = nullptr;
-        }         
+        } 
+        
+        buttonCharacteristic = remoteService->getCharacteristic(BLEUUID(BUTTON_UUID));
+        buttonCharacteristic->registerForNotify(buttonNotification);       
     }
     else
     {
         Serial.println("Failed to connect");
         _foundDevice = nullptr;
-    } // end if
+    }
 }
 void BLEClientLibrary::Disconnect() 
 {

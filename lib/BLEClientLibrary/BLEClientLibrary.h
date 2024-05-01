@@ -13,19 +13,22 @@ class BLEClientLibrary: public BLEAdvertisedDeviceCallbacks, public BLEClientCal
         BLEClient *_client;
         BLEScan *_scan;
         BLEAdvertisedDevice *_foundDevice = nullptr;
+        static BLERemoteCharacteristic *buttonCharacteristic;
+        static void (*_notificationCallback)(void);
 
         // Callbacks
         void onResult(BLEAdvertisedDevice advertisedDevice);
         void onConnect(BLEClient *client);
         void onDisconnect(BLEClient *client);
+        static void buttonNotification(BLERemoteCharacteristic *characteristic, uint8_t *data,size_t length, bool flag);
 
     public:
-        void begin();
+        void begin(void(*notificationCallback)(void));
         void StartScan();
         void Connect(BLEAdvertisedDevice *device); 
         void Disconnect();  
         bool isConnected();
-        BLEAdvertisedDevice *GetFoundDevice();
+        BLEAdvertisedDevice *GetFoundDevice();    
 };
 
 #endif
